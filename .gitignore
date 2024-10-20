@@ -1,0 +1,4 @@
+/files/
+.idea/
+/test_with_iris/trained_models/
+__pycache__/
