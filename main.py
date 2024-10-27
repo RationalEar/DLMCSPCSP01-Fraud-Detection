@@ -23,7 +23,12 @@ app.config['REQUEST_TIMEOUT'] = 600
 
 
 @app.route('/generate-data', methods=['GET'])
-def generate_data(overwrite=False):
+def generate_data():
+    refresh = request.args.get('refresh', 'no')
+    if refresh == 'yes':
+        overwrite = True
+    else:
+        overwrite = False
     end_date_obj = datetime.datetime.strptime(START_DATE, DATE_FORMAT) + datetime.timedelta(days=NUMBER_OF_DAYS)
     end_date = end_date_obj.strftime(DATE_FORMAT)
     print(f"Start date: {START_DATE}, End date: {end_date}, Number of days: {NUMBER_OF_DAYS}")
