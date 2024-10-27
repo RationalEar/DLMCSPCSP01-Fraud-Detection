@@ -21,6 +21,7 @@ MODELS = ('decision_tree', 'logistic_regression', 'random_forest', 'xgboost')
 app = Flask(__name__)
 app.config['REQUEST_TIMEOUT'] = 600
 
+
 @app.route('/generate-data', methods=['GET'])
 def generate_data(overwrite=False):
     end_date_obj = datetime.datetime.strptime(START_DATE, DATE_FORMAT) + datetime.timedelta(days=NUMBER_OF_DAYS)
@@ -28,7 +29,8 @@ def generate_data(overwrite=False):
     print(f"Start date: {START_DATE}, End date: {end_date}, Number of days: {NUMBER_OF_DAYS}")
     
     print('Generating data...')
-    generate_dataset_and_save(NUMBER_OF_CUSTOMERS, NUMBER_OF_TERMINALS, NUMBER_OF_DAYS, START_DATE, DIR_RAW_DATA, overwrite)
+    generate_dataset_and_save(NUMBER_OF_CUSTOMERS, NUMBER_OF_TERMINALS, NUMBER_OF_DAYS, START_DATE, DIR_RAW_DATA,
+                              overwrite)
     
     print('Transforming data...')
     transform_dataset_and_save(START_DATE, end_date, DIR_RAW_DATA, DIR_TRANSFORMED_DATA, overwrite)
@@ -36,7 +38,12 @@ def generate_data(overwrite=False):
 
 
 @app.route('/train', methods=['GET'])
-def train(overwrite=False):
+def train():
+    retrain = request.args.get('retrain', 'no')
+    if retrain == 'yes':
+        overwrite = True
+    else:
+        overwrite = False
     print('Training models...')
     transaction_df = load_data(DIR_TRANSFORMED_DATA, LOAD_START_DATE, LOAD_END_DATE)
     print(f"Number of transactions for training: {len(transaction_df)}")
@@ -48,17 +55,14 @@ def train(overwrite=False):
 
 @app.route('/predict', methods=['GET'])
 def predict():
-    start_date_obj = datetime.datetime.strptime(START_DATE, DATE_FORMAT) + datetime.timedelta(days=NUMBER_OF_DAYS-8)
+    start_date_obj = datetime.datetime.strptime(START_DATE, DATE_FORMAT) + datetime.timedelta(days=NUMBER_OF_DAYS - 8)
     start_date = start_date_obj.strftime(DATE_FORMAT)
     end_date_obj = datetime.datetime.strptime(START_DATE, DATE_FORMAT) + datetime.timedelta(days=NUMBER_OF_DAYS)
     end_date = end_date_obj.strftime(DATE_FORMAT)
     predictions = test_predictions(start_date, end_date, DIR_TRANSFORMED_DATA, MODELS_DIR, MODELS)
-    prediction = 'Fraudulent' if predictions == 1 else 'Non-fraudulent'
-    return jsonify({'prediction': prediction})
-    
+    return jsonify(predictions)
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    app.run(debug=True)
-    
-
+    app.run()

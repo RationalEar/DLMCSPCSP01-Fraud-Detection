@@ -37,28 +37,30 @@ def predict_fraud_status(transaction, model):
 
 def test_predictions(start_date, end_date, data_input_dir, models_dir, models):
     # Get a random transaction
-    transaction = get_random_transaction(start_date, end_date, data_input_dir)
+    original_transaction = get_random_transaction(start_date, end_date, data_input_dir)
     # get fraud status
-    fraud_status = transaction['TX_FRAUD'].values[0]
+    fraud_status = original_transaction['TX_FRAUD'].values[0]
     # select input features
-    transaction = transaction[INPUT_FEATURES]
-    
-    print(f"Actual Fraud Status: {fraud_status}")
-    print(f"Available models: {models}")
+    transaction = original_transaction[INPUT_FEATURES]
     
     # Make prediction using each model
     predictions = []
+    model_predictions = {}
     start_time = time.time()
     for model_name in models:
         model = models_dir + model_name + '.pkl'
         prediction = predict_fraud_status(transaction, model)
         predictions.append(prediction[0])
+        model_predictions[model_name] = int(prediction[0])
         print(f"Model: {model_name}, Predicted Fraud Status: {prediction[0]}")
     
     print("Time to make prediction: {0:.2}s".format(time.time() - start_time))
-    # set predicted status = True if the majority of models predict fraud
-    predicted_status = 1 if sum(predictions) > len(models) / 2 else 0
+    # set predicted status = True if at least one of models predict fraud
+    predicted_status = 1 if sum(predictions) > 0 else 0
     
     print(f"Actual Fraud Status: {fraud_status}, \nPredicted Fraud Status: {predicted_status}")
-    return predicted_status
+    results = {'actual_status': int(fraud_status), 'predicted_status': predicted_status,
+               'prediction_time': time.time() - start_time, 'model_predictions': model_predictions,
+               'transaction': original_transaction.to_dict('records')}
+    return results
 

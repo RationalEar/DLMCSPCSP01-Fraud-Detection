@@ -265,7 +265,7 @@ def prequential_grid_search_with_sampler(transactions_df,
                                                   delta_assessment=delta_assessment)
     
     grid_search = sklearn.model_selection.GridSearchCV(pipe, parameters, scoring=scoring, cv=prequential_split_indices,
-                                                       refit='card_precision@100', n_jobs=n_jobs)
+                                                       refit='average_precision', n_jobs=n_jobs)
     
     X = transactions_df[input_features]
     y = transactions_df[output_feature]
